@@ -44,7 +44,10 @@
         }
         .q-title { font-size: 28px; font-weight: bold; color: #333; letter-spacing: 2px; }
         .q-date { font-size: 13px; text-align: right; }
+        
         .q-recipient-box { margin-bottom: 20px; }
+        
+        /* 宛名行（名前 + 様） */
         .q-recipient { 
             font-size: 20px; 
             border-bottom: 1px solid #333; 
@@ -53,7 +56,15 @@
             min-width: 250px; 
             font-weight: bold;
         }
-        .q-recipient-honorific { font-size: 16px; margin-left: 10px; font-weight: normal; } /* 敬称用 */
+        
+        /* 保護者様行（改行して表示） */
+        .q-guardian-line {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 8px; /* 上の行との間隔 */
+            padding-left: 2px;
+        }
         
         .q-sender { 
             float: right;
@@ -510,8 +521,11 @@
 
         <div class="q-recipient-box">
             <div class="q-recipient">
-                <span id="q-name-value">お客様</span>
-                <span class="q-recipient-honorific">保護者様</span>
+                <span id="q-name-value">お客様</span> 様
+            </div>
+            <!-- 名前行の下に配置 -->
+            <div class="q-guardian-line">
+                保護者様
             </div>
         </div>
 
