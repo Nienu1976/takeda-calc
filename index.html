@@ -53,6 +53,8 @@
             min-width: 250px; 
             font-weight: bold;
         }
+        .q-recipient-honorific { font-size: 16px; margin-left: 10px; font-weight: normal; } /* 敬称用 */
+        
         .q-sender { 
             float: right;
             font-size: 12px; 
@@ -180,7 +182,6 @@
                     </div>
                     <div class="flex gap-2 mb-3">
                         <select id="schoolPreset" class="w-full border rounded p-2 text-sm" onchange="loadSchoolPreset()">
-                            <option value="fujieda">武田塾 藤枝校</option>
                             <option value="custom">新規作成 / 手入力</option>
                             <!-- 保存された校舎がここに動的に追加されます -->
                         </select>
@@ -509,7 +510,8 @@
 
         <div class="q-recipient-box">
             <div class="q-recipient">
-                <span id="q-name-value">お客様</span> 様
+                <span id="q-name-value">お客様</span>
+                <span class="q-recipient-honorific">保護者様</span>
             </div>
         </div>
 
@@ -612,13 +614,14 @@
 
             // フィールドへのセット処理
             let data = null;
-            if (selectedVal === 'fujieda') {
-                data = defaultPreset.fujieda;
-                btnDelete.style.display = 'none';
-            } else if (selectedVal === 'custom') {
-                // 手入力モード：フィールドはクリア
-                // data = { name: "", zip: "", ... } とすると入力中のものが消えるので
-                // ここでは何もしない（ユーザーが手入力する）
+            if (selectedVal === 'custom') {
+                // customの場合、手動入力用だが、
+                // ロード直後の場合は藤枝校の情報をデフォルト値として入れる
+                // ここでは「選択肢が変わったとき」の処理なので、
+                // もしユーザーが明示的にcustomを選んだならクリアする等の挙動も考えられるが、
+                // ユーザビリティ的には「前回値」または「空」が自然。
+                // 今回は「藤枝校デフォルト値」をあえてセットしない（手入力用）
+                // ただし、ページロード直後の初期化（引数なし）の場合は藤枝校を入れる。
                 data = null; 
                 btnDelete.style.display = 'none';
             } else {
@@ -640,17 +643,16 @@
                 document.getElementById('si_mail').value = data.mail || '';
                 document.getElementById('si_rep').value = data.rep || '';
             } else if (selectedVal === 'custom') {
-                // 新規作成時のみクリア（意図しない消去を防ぐため簡易チェック）
-                // 厳密には「直前がcustom以外だった場合」のみクリアしたいが、今回は単純化
-                if (document.getElementById('si_name').value === defaultPreset.fujieda.name) {
-                    document.getElementById('si_name').value = '';
-                    document.getElementById('si_zip').value = '';
-                    document.getElementById('si_address').value = '';
-                    document.getElementById('si_address2').value = '';
-                    document.getElementById('si_tel').value = '';
-                    document.getElementById('si_mail').value = '';
-                    document.getElementById('si_rep').value = '';
-                }
+                // 明示的にcustomを選んだ場合はクリア（初期ロード時はここを通らない）
+                // ただし初期ロード直後のvalue=customの状態ではクリアしたくないので判定が必要だが
+                // 簡易的に空欄にする
+                document.getElementById('si_name').value = '';
+                document.getElementById('si_zip').value = '';
+                document.getElementById('si_address').value = '';
+                document.getElementById('si_address2').value = '';
+                document.getElementById('si_tel').value = '';
+                document.getElementById('si_mail').value = '';
+                document.getElementById('si_rep').value = '';
             }
         }
 
@@ -702,7 +704,7 @@
         function deleteSchoolInfo() {
             const select = document.getElementById('schoolPreset');
             const id = select.value;
-            if (id === 'fujieda' || id === 'custom') return;
+            if (id === 'custom') return;
 
             if (!confirm("現在選択している校舎情報を削除しますか？")) return;
 
@@ -716,19 +718,19 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(newPresets));
 
             alert("削除しました。");
-            refreshPresetList('fujieda'); // 藤枝に戻す
+            refreshPresetList('custom');
         }
 
         // セレクトボックスの選択肢を再生成
         function refreshPresetList(selectId) {
             const select = document.getElementById('schoolPreset');
-            // 一旦全クリアしてデフォルトを追加
             select.innerHTML = '';
             
-            const optFujieda = document.createElement('option');
-            optFujieda.value = 'fujieda';
-            optFujieda.text = '武田塾 藤枝校';
-            select.appendChild(optFujieda);
+            // デフォルトは「手入力(カスタム)」にする
+            const optCustom = document.createElement('option');
+            optCustom.value = 'custom';
+            optCustom.text = '手入力 (カスタム)';
+            select.appendChild(optCustom);
 
             // ローカルストレージから読み込み
             const stored = localStorage.getItem(STORAGE_KEY);
@@ -742,14 +744,30 @@
                 });
             }
 
-            const optCustom = document.createElement('option');
-            optCustom.value = 'custom';
-            optCustom.text = '新規作成 / 手入力';
-            select.appendChild(optCustom);
-
-            // 選択状態を復元
-            select.value = selectId || 'fujieda';
-            loadSchoolPreset(); // フィールド反映
+            // 選択状態を復元またはデフォルト
+            if (selectId && selectId !== 'custom') {
+                select.value = selectId;
+                loadSchoolPreset(); // データロード
+            } else {
+                select.value = 'custom';
+                
+                // 初期状態として藤枝校のデータを入れておく（UX向上）
+                // ただし、もし既に何か入力されていたら上書きしない方が良いかもしれないが
+                // ここでは初期化時のみ想定
+                if (!document.getElementById('si_name').value) {
+                    const data = defaultPreset.fujieda;
+                    document.getElementById('si_name').value = data.name;
+                    document.getElementById('si_zip').value = data.zip;
+                    document.getElementById('si_address').value = data.address;
+                    document.getElementById('si_address2').value = data.address2;
+                    document.getElementById('si_tel').value = data.tel;
+                    document.getElementById('si_mail').value = data.mail;
+                    document.getElementById('si_rep').value = data.rep;
+                }
+                
+                // 削除ボタン非表示
+                document.getElementById('btnDeletePreset').style.display = 'none';
+            }
         }
 
         // 以下、既存の計算・PDFロジック (省略なし)
