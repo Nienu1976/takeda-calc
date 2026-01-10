@@ -88,7 +88,8 @@
             padding-bottom: 5px;
         }
 
-        .q-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 13px; }
+        /* テーブルレイアウトの修正: 固定幅にして重なりを防ぐ */
+        .q-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 13px; table-layout: fixed; }
         .q-table th { 
             background-color: #4b5563; 
             color: white; 
@@ -96,16 +97,28 @@
             text-align: center; 
             font-weight: bold; 
             border: 1px solid #4b5563;
+            overflow: hidden;
         }
         .q-table td { 
             border: 1px solid #d1d5db; 
             padding: 10px 10px; 
-            vertical-align: middle; 
+            vertical-align: middle;
+            word-wrap: break-word; /* 長い文字は折り返す */
         }
         .q-table .col-center { text-align: center; }
         .q-table .col-right { text-align: right; }
-        .q-table .col-price { text-align: right; width: 120px; font-weight: bold; }
+        .q-table .col-price { text-align: right; font-weight: bold; white-space: nowrap; } /* 金額は折り返さない */
         .q-table .row-highlight { background-color: #fff1f2; font-weight: bold; }
+
+        .q-annual-box {
+            margin-top: 20px;
+            padding: 10px;
+            border: 2px dashed #999;
+            background-color: #f9fafb;
+            text-align: right;
+        }
+        .q-annual-label { font-size: 14px; font-weight: bold; color: #555; }
+        .q-annual-amount { font-size: 20px; font-weight: bold; color: #333; margin-left: 10px; }
 
         .q-note { font-size: 11px; color: #555; line-height: 1.6; margin-top: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 4px; }
     </style>
@@ -456,9 +469,14 @@
 
         <div class="q-section-title">内訳詳細</div>
         <table class="q-table">
+            <colgroup>
+                <col style="width: 30%;">
+                <col style="width: 45%;">
+                <col style="width: 25%;">
+            </colgroup>
             <thead>
                 <tr>
-                    <th style="width: 25%;">項目</th>
+                    <th>項目</th>
                     <th>内容・期間</th>
                     <th class="col-price">金額(税込)</th>
                 </tr>
@@ -468,15 +486,22 @@
             </tbody>
         </table>
 
-        <!-- お支払いスケジュール表 (新規追加) -->
+        <!-- お支払いスケジュール表 -->
         <div class="q-section-title">お支払いスケジュール</div>
         <table class="q-table">
+            <colgroup>
+                <col style="width: 15%;">
+                <col style="width: 15%;">
+                <col style="width: 35%;">
+                <col style="width: 15%;">
+                <col style="width: 20%;">
+            </colgroup>
             <thead>
                 <tr>
-                    <th style="width: 15%;">時期</th>
-                    <th style="width: 20%;">種別</th>
+                    <th>時期</th>
+                    <th>種別</th>
                     <th>内容・対象期間</th>
-                    <th style="width: 18%;">お支払期限</th>
+                    <th>期限</th>
                     <th class="col-price">お支払金額</th>
                 </tr>
             </thead>
@@ -484,6 +509,12 @@
                 <!-- JSで生成 -->
             </tbody>
         </table>
+
+        <!-- 年間総額表示エリア -->
+        <div class="q-annual-box">
+            <span class="q-annual-label">ご契約期間中のお支払い総額 (概算) :</span>
+            <span class="q-annual-amount" id="q-annual-total">¥ 0</span>
+        </div>
 
         <div id="q-schedule-note" class="q-note">
             <!-- 注釈 -->
@@ -671,7 +702,7 @@
                         phase: '毎月',
                         type: '口座引落',
                         desc: `特訓料金 (${debitM}月分以降)`,
-                        limit: `毎月20日 (${debitM}月〜)`,
+                        limit: `毎月20日`,
                         amount: monthlyTotal
                     });
                 }
@@ -760,6 +791,14 @@
                 scheduleItems[0].amount = grandTotal_Initial;
             }
 
+            // --- 年間総額計算 ---
+            // 単純に全期間の支払予定額を合計する
+            // = 入会金 + 初月 + (月額 * 月数) - 全割引
+            // ただし割引は「1回目割引 + 2回目割引」の合計
+            const totalDiscountAll = (displayBulkDiscount) + (bulkDiscount2);
+            const annualTotal = entranceFee + firstMonthFee + (monthlyTotal * regularMonths) - totalDiscountAll;
+
+
             // --- 画面更新 ---
             document.getElementById('monthlyTotalRaw').innerText = rawMonthlyTotal.toLocaleString();
             document.getElementById('multiCourseDiscount').innerText = "-" + discountAmount.toLocaleString();
@@ -795,7 +834,10 @@
                 secondLabel: '',
                 
                 // スケジュール
-                schedule: scheduleItems
+                schedule: scheduleItems,
+                
+                // 年間総額
+                annualTotal: annualTotal
             };
 
             if (monthlyDisplayMode) {
@@ -910,7 +952,7 @@
                 if (r.price === 0 && r.item.includes("正規") && r.price === 0) return; // 0円なら飛ばす
                 const tr = document.createElement('tr');
                 const priceStr = r.price < 0 ? "▲" + Math.abs(r.price).toLocaleString() : r.price.toLocaleString();
-                tr.innerHTML = `<td>${r.item}</td><td class="col-note">${r.note}</td><td class="col-price">${priceStr}</td>`;
+                tr.innerHTML = `<td>${r.item}</td><td>${r.note}</td><td class="col-price">${priceStr}</td>`;
                 tbody.appendChild(tr);
             });
 
@@ -931,6 +973,9 @@
                 `;
                 schedTbody.appendChild(tr);
             });
+
+            // 年間総額
+            document.getElementById('q-annual-total').innerText = "¥ " + pdfData.annualTotal.toLocaleString();
 
             // 2. html2canvasで画像化
             const element = document.getElementById('quotation-wrapper');
