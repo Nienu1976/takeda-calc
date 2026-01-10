@@ -25,9 +25,10 @@
             position: absolute;
             top: -9999px;
             left: -9999px;
-            /* A4 width is approx 794px at 96dpi, but we use a fixed pixel width for consistent html2canvas rendering */
+            /* A4 width is approx 794px at 96dpi */
             width: 800px; 
-            min-height: 1120px; /* A4 height approx */
+            /* 内容が見切れないよう十分な高さを確保（A4縦比率より少し長めでも縮小フィットさせるロジックに変更可能だが、まずはcanvas描画範囲を確保） */
+            min-height: 1200px; 
             background: white;
             padding: 40px 50px;
             box-sizing: border-box;
@@ -984,7 +985,9 @@
             const options = {
                 scale: 2, // Retina display quality
                 useCORS: true,
-                logging: false
+                logging: false,
+                windowWidth: 1000, // 広めの仮想ウィンドウ幅でレイアウト崩れ防止
+                windowHeight: 2000 // 仮想ウィンドウ高さ
             };
             
             html2canvas(element, options).then(canvas => {
