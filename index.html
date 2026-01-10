@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>武田塾 入会金・料金計算ツール（2026年度版）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+        body { font-family: 'Noto Sans JP', sans-serif; }
+        .input-group { margin-bottom: 0.5rem; }
+        .result-box { border: 2px solid #ef4444; background-color: #fff5f5; }
+        .discount-badge { font-size: 0.7rem; padding: 2px 4px; border-radius: 4px; background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+        <header class="bg-red-700 text-white p-4">
+            <h1 class="text-xl md:text-2xl font-bold">武田塾 入会金・特訓料金計算ツール (2026年度版)</h1>
+            <p class="text-sm opacity-90">条件を入力すると、申込書記入用の金額が自動算出されます。</p>
+        </header>
+
+        <div class="flex flex-col md:flex-row">
+            <!-- 左側：入力フォーム -->
+            <div class="w-full md:w-5/12 p-6 border-r border-gray-200">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">1. 条件入力</h2>
+
+                <div class="mb-5">
+                    <label class="block text-sm font-bold mb-1">入塾日 (契約日)</label>
+                    <input type="date" id="startDate" class="w-full border rounded p-2" value="2026-03-10" onchange="calculate()">
+                    <p class="text-xs text-gray-500 mt-1">※年度末(2027年2月末)までの月数を自動計算</p>
+                </div>
+
+                <div class="flex gap-4 mb-5">
+                    <div class="w-1/2">
+                        <label class="block text-sm font-bold mb-1">初月残り週数</label>
+                        <select id="startWeeks" class="w-full border rounded p-2" onchange="calculate()">
+                            <option value="1">1週分</option>
+                            <option value="2">2週分</option>
+                            <option value="3" selected>3週分</option>
+                            <option value="4">4週分 (丸々1ヶ月)</option>
+                        </select>
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-sm font-bold mb-1">入会金</label>
+                        <input type="number" id="entranceFee" class="w-full border rounded p-2" value="44000" oninput="calculate()">
+                    </div>
+                </div>
+
+                <div class="mb-6 bg-red-50 p-3 rounded border border-red-100">
+                    <label class="block text-sm font-bold mb-2">支払い方法</label>
+                    <select id="paymentMethod" class="w-full border rounded p-2 mb-2" onchange="togglePaymentDetail(); calculate();">
+                        <option value="monthly">毎月払い (月謝)</option>
+                        <option value="lump">一括払い (まとめ払い)</option>
+                        <option value="split2">2回払い (分割)</option>
+                    </select>
+                    
+                    <!-- 2回払い詳細設定 -->
+                    <div id="splitDetail" class="hidden text-sm">
+                        <div class="flex justify-between items-center mt-2">
+                            <span>1回目の支払い月数:</span>
+                            <div class="flex items-center">
+                                <input type="number" id="firstPaymentMonths" class="w-16 border rounded p-1 text-right mr-1" value="6" min="1" oninput="calculate()">
+                                <span>ヶ月分</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">※残りが第2回振込になります</p>
+                    </div>
+
+                    <!-- 毎月払い詳細設定（第2回振込用） -->
+                    <div id="monthlyDetail" class="text-sm">
+                        <div class="flex justify-between items-center mt-2 border-t pt-2 border-red-200">
+                            <span>第2回振込 (振替手続中):</span>
+                            <select id="secondTransferMonths" class="w-32 border rounded p-1" onchange="calculate()">
+                                <option value="1" selected>1ヶ月分 (通常)</option>
+                                <option value="2">2ヶ月分</option>
+                                <option value="0">なし</option>
+                            </select>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">※口座振替手続き完了までのつなぎ期間分</p>
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-gray-700 mb-2 mt-6 border-b flex justify-between items-end">
+                    <span>受講コース (高校生・既卒)</span>
+                </h3>
+                <p class="text-xs text-gray-500 mb-2">※<span class="discount-badge">割引対象</span>マークのあるコースは、週2回以上の受講で割引(9,240円/回)が適用されます。</p>
+                
+                <div class="space-y-2 text-sm max-h-96 overflow-y-auto pr-1">
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-6 flex flex-col">
+                            <span>個別管理特訓S (51,700)</span>
+                            <span class="discount-badge w-fit">割引対象</span>
+                        </div>
+                        <div class="col-span-3"><input type="number" min="0" value="0" data-price="51700" data-is-target="true" class="course-input w-full border rounded p-1 text-right" oninput="calculate()"></div>
+                        <div class="col-span-3 text-right text-gray-500">コマ</div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-6 flex flex-col">
+                            <span>個別管理特訓L (61,380)</span>
+                            <span class="discount-badge w-fit">割引対象</span>
+                        </div>
+                        <div class="col-span-3"><input type="number" min="0" value="0" data-price="61380" data-is-target="true" class="course-input w-full border rounded p-1 text-right" oninput="calculate()"></div>
+                        <div class="col-span-3 text-right text-gray-500">コマ</div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-2 items-center border-t pt-2">
+                        <div class="col-span-6">宿題確認特訓S (81,180)</div>
+                        <div class="col-span-3"><input type="number" min="0" value="0" data-price="81180" data-is-target="false" class="course-input w-full border rounded p-1 text-right" oninput="calculate()"></div>
+                        <div class="col-span-3 text-right text-gray-500">コマ</div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-6">宿題確認特訓L (102,300)</div>
+                        <div class="col-span-3"><input type="number" min="0" value="0" data-price="102300" data-is-target="false" class="course-input w-full border rounded p-1 text-right" oninput="calculate()"></div>
+                        <div class="col-span-3 text-right text-gray-500">コマ</div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-6">独学支援特訓S (55,440)</div>
+                        <div class="col-span-3"><input type="number" min="0" value="0" data-price="55440" data-is-target="false" class="course-input w-full border rounded p-1 text-right" oninput="calculate()"></div>
+                        <div class="col-span-3 text-right text-gray-500">コマ</div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-6">独学支援特訓L (67,540)</div>
+                        <div class="col-span-3"><input type="number" min="0" value="0" data-price="67540" data-is-target="false" class="course-input w-full border rounded p-1 text-right" oninput="calculate()"></div>
+                        <div class="col-span-3 text-right text-gray-500">コマ</div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-6">小論個別特訓 (51,700)</div>
+                        <div class="col-span-3"><input type="number" min="0" value="0" data-price="51700" data-is-target="false" class="course-input w-full border rounded p-1 text-right" oninput="calculate()"></div>
+                        <div class="col-span-3 text-right text-gray-500">コマ</div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-6">完全個別特訓 (66,440)</div>
+                        <div class="col-span-3"><input type="number" min="0" value="0" data-price="66440" data-is-target="false" class="course-input w-full border rounded p-1 text-right" oninput="calculate()"></div>
+                        <div class="col-span-3 text-right text-gray-500">コマ</div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-2 items-center bg-blue-50 p-1 rounded">
+                        <div class="col-span-6">習慣コーチング (24,200)</div>
+                        <div class="col-span-3"><input type="number" min="0" value="0" data-price="24200" data-is-target="false" class="course-input w-full border rounded p-1 text-right" oninput="calculate()"></div>
+                        <div class="col-span-3 text-right text-gray-500">コマ</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：計算結果 -->
+            <div class="w-full md:w-7/12 p-6 bg-gray-50">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">2. 申込書記入内容</h2>
+
+                <!-- ロジック確認用 -->
+                <div class="mb-4 text-xs text-gray-600 bg-white p-2 rounded border border-gray-200">
+                    <div class="flex flex-wrap gap-x-4 gap-y-1">
+                        <span>月額合計(定価): <span id="monthlyTotalRaw">0</span>円</span>
+                        <span class="text-blue-600">多コース割引: <span id="multiCourseDiscount">-0</span>円</span>
+                        <span class="font-bold text-black">月額請求額: <span id="monthlyTotalFinal">0</span>円</span>
+                    </div>
+                    <div class="mt-1 text-gray-400">
+                        <span>期間: <span id="periodText"></span> (正規 <span id="regularMonths">0</span>ヶ月)</span>
+                    </div>
+                </div>
+
+                <!-- 申込書右下模写エリア -->
+                <div class="result-box p-5 rounded relative shadow-sm">
+                    <div class="absolute top-0 right-0 bg-red-600 text-white text-xs px-3 py-1 font-bold rounded-bl">申込書 右下・記入欄</div>
+                    <h3 class="text-center font-bold mb-6 text-red-800 text-lg border-b border-red-200 pb-2">◆お支払い方法</h3>
+
+                    <div class="space-y-4">
+                        <!-- 初回振込額 -->
+                        <div class="bg-white p-3 rounded border border-gray-200">
+                            <h4 class="text-sm font-bold text-gray-700 mb-2 border-l-4 border-red-500 pl-2">□ 初回振込額</h4>
+                            
+                            <div class="grid grid-cols-1 gap-2 pl-2">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span>入会金</span>
+                                    <span class="font-bold text-lg" id="displayEntranceFee">0円</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span id="firstMonthLabel">初月 (0月0週分)</span>
+                                    <span class="font-bold text-lg" id="displayFirstMonth">0円</span>
+                                </div>
+                                
+                                <!-- 毎月払いの場合の次月以降 -->
+                                <div class="flex justify-between items-center text-sm" id="rowRegularMonthly">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">次月以降 (月額)</span>
+                                        <span class="text-xs text-gray-500" id="nextMonthLabelMonthly">0月分〜</span>
+                                    </div>
+                                    <span class="font-bold text-lg text-blue-700" id="displayRegularMonthly">0円</span>
+                                </div>
+
+                                <!-- 一括・分割・毎月(初回まとめ)の場合の次月以降 -->
+                                <div class="flex justify-between items-center text-sm hidden" id="rowRegularLump">
+                                    <div class="flex flex-col">
+                                        <span>次月以降 (まとめ分)</span>
+                                        <span class="text-xs text-gray-500" id="nextMonthLabelLump">0月分〜0月分</span>
+                                    </div>
+                                    <span class="font-bold text-lg" id="displayRegularLump">0円</span>
+                                </div>
+
+                                <div class="flex justify-between items-center text-sm text-gray-400">
+                                    <span>その他</span>
+                                    <span>0円</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm text-red-600 bg-red-50 p-1 -mx-1 rounded">
+                                    <span>割引額 (まとめ払い等)</span>
+                                    <span class="font-bold" id="displayBulkDiscount">-0円</span>
+                                </div>
+                                <div class="border-t border-gray-300 mt-1 pt-2 flex justify-between items-center">
+                                    <span class="font-bold text-gray-800">合計 (初回振込額)</span>
+                                    <span class="text-2xl font-bold text-red-600" id="displayGrandTotal">0円</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 第2回振込 -->
+                        <div class="bg-white p-3 rounded border border-gray-200">
+                            <h4 class="text-sm font-bold text-gray-700 mb-2 border-l-4 border-red-500 pl-2">□ 第2回 (振込)</h4>
+                            <div class="pl-2">
+                                <div class="flex justify-between items-center text-sm mb-1">
+                                    <span class="text-gray-600" id="secondPaymentLabel">対象期間: なし</span>
+                                </div>
+                                <div class="flex justify-between items-center border-t border-gray-100 pt-1">
+                                    <span class="font-bold text-gray-800">合計 (第2回振込額)</span>
+                                    <span class="text-xl font-bold text-gray-800" id="displaySecondPayment">0円</span>
+                                </div>
+                                <p class="text-xs text-right text-gray-400 mt-1">期限: <span id="secondPaymentDate">指定日</span> まで</p>
+                            </div>
+                        </div>
+
+                        <!-- 第3回以降 -->
+                        <div class="bg-gray-100 p-3 rounded border border-gray-200 text-gray-500">
+                            <h4 class="text-sm font-bold mb-1 pl-2">□ 第3回 口座振替</h4>
+                            <div class="pl-2 text-sm flex justify-between">
+                                <span id="debitStartLabel">自動引落開始月</span>
+                                <span>20日〜</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePaymentDetail() {
+            const method = document.getElementById('paymentMethod').value;
+            const splitDetail = document.getElementById('splitDetail');
+            const monthlyDetail = document.getElementById('monthlyDetail');
+            
+            if (method === 'split2') {
+                splitDetail.classList.remove('hidden');
+                monthlyDetail.classList.add('hidden');
+            } else if (method === 'monthly') {
+                splitDetail.classList.add('hidden');
+                monthlyDetail.classList.remove('hidden');
+            } else {
+                splitDetail.classList.add('hidden');
+                monthlyDetail.classList.add('hidden');
+            }
+        }
+
+        function calculate() {
+            // --- 1. 入力値の取得 ---
+            const entranceFee = parseInt(document.getElementById('entranceFee').value) || 0;
+            const startWeeks = parseInt(document.getElementById('startWeeks').value) || 0;
+            const startDateStr = document.getElementById('startDate').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            
+            // --- 2. コース料金の計算 ---
+            let totalCourseCount = 0;   // 全コース数
+            let targetCourseCount = 0;  // 割引対象コース数
+            let rawMonthlyTotal = 0;    // 定価合計
+
+            document.querySelectorAll('.course-input').forEach(input => {
+                const count = parseInt(input.value) || 0;
+                const price = parseInt(input.dataset.price) || 0;
+                const isTarget = input.dataset.isTarget === "true";
+
+                totalCourseCount += count;
+                rawMonthlyTotal += count * price;
+
+                if (isTarget) {
+                    targetCourseCount += count;
+                }
+            });
+
+            // 多コース割引ロジック（重要）
+            // ルール: 「週2回以上受講する方に限り、対象コースの回数分の割引(9,240円×対象コース回数)となります」
+            // 条件: totalCourseCount >= 2
+            // 割引額: targetCourseCount * 9240
+            let discountAmount = 0;
+            if (totalCourseCount >= 2) {
+                discountAmount = 9240 * targetCourseCount;
+            }
+
+            const monthlyTotal = rawMonthlyTotal - discountAmount;
+
+            // --- 3. 期間計算 ---
+            const startDate = new Date(startDateStr);
+            let endYear = startDate.getFullYear();
+            const startMonth = startDate.getMonth() + 1; // 1-12
+            
+            // 年度末(翌年2月)判定
+            if (startMonth >= 3) endYear += 1;
+            
+            // 翌月1日
+            let nextMonthDate = new Date(startDate);
+            nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+            nextMonthDate.setDate(1); 
+            const nextMonthNum = nextMonthDate.getMonth() + 1;
+
+            // 終了日（年度末）
+            const endDate = new Date(endYear, 2, 0); // 3月0日=2月末
+
+            // 正規月数（入会翌月〜2月末）
+            let regularMonths = 0;
+            if (endDate >= nextMonthDate) {
+                regularMonths = (endDate.getFullYear() - nextMonthDate.getFullYear()) * 12 + (endDate.getMonth() - nextMonthDate.getMonth()) + 1;
+            }
+
+            // --- 4. 支払い振分けロジック ---
+            const firstMonthFee = Math.floor(monthlyTotal / 4 * startWeeks); // 初月(週割)
+
+            let initialPayment_RegularMonths = 0; // 初回振込に含める「翌月以降の月数」
+            let secondPayment_RegularMonths = 0;  // 第2回振込に含める「翌月以降の月数」
+            let monthlyDisplayMode = false;       // 「次月以降」欄を月額単価表示にするか
+
+            let bulkDiscount = 0; // まとめ払い割引額
+
+            if (paymentMethod === 'monthly') {
+                // 【毎月払い】
+                monthlyDisplayMode = true;
+                initialPayment_RegularMonths = 1; 
+
+                // 第2回振込
+                const secondTransferOption = parseInt(document.getElementById('secondTransferMonths').value) || 0;
+                if (regularMonths < 1) initialPayment_RegularMonths = regularMonths; 
+                
+                let remainingMonths = regularMonths - initialPayment_RegularMonths;
+                if (secondTransferOption > 0) {
+                    secondPayment_RegularMonths = Math.min(secondTransferOption, remainingMonths);
+                }
+
+            } else if (paymentMethod === 'lump') {
+                // 【一括払い】
+                initialPayment_RegularMonths = regularMonths;
+                secondPayment_RegularMonths = 0;
+                
+                const totalDuration = regularMonths + (startWeeks / 4.0);
+                if (totalDuration >= 6) bulkDiscount = 33000;
+                else if (totalDuration >= 3) bulkDiscount = 11000;
+
+            } else if (paymentMethod === 'split2') {
+                // 【2回払い】
+                const firstPayInput = parseInt(document.getElementById('firstPaymentMonths').value) || 6;
+                initialPayment_RegularMonths = Math.min(firstPayInput, regularMonths);
+                secondPayment_RegularMonths = regularMonths - initialPayment_RegularMonths;
+
+                const firstDuration = initialPayment_RegularMonths + (startWeeks / 4.0);
+                if (firstDuration >= 3) bulkDiscount += 11000;
+                if (secondPayment_RegularMonths >= 3) bulkDiscount += 11000;
+            }
+
+            // --- 5. 金額計算 ---
+            const regularFee_Initial = monthlyTotal * initialPayment_RegularMonths;
+            const regularFee_Second = monthlyTotal * secondPayment_RegularMonths;
+            const grandTotal_Initial = entranceFee + firstMonthFee + regularFee_Initial - bulkDiscount;
+
+
+            // --- 6. 表示更新 ---
+            
+            // ロジック確認用
+            document.getElementById('monthlyTotalRaw').innerText = rawMonthlyTotal.toLocaleString();
+            document.getElementById('multiCourseDiscount').innerText = "-" + discountAmount.toLocaleString();
+            document.getElementById('monthlyTotalFinal').innerText = monthlyTotal.toLocaleString();
+            
+            document.getElementById('periodText').innerText = `${startMonth}月${startDate.getDate()}日 〜 ${endYear}年2月末`;
+            document.getElementById('regularMonths').innerText = regularMonths;
+
+            // 初回振込欄
+            document.getElementById('displayEntranceFee').innerText = entranceFee.toLocaleString() + "円";
+            document.getElementById('firstMonthLabel').innerText = `初月 (${startMonth}月 ${startWeeks}週分)`;
+            document.getElementById('displayFirstMonth').innerText = firstMonthFee.toLocaleString() + "円";
+            document.getElementById('displayBulkDiscount').innerText = bulkDiscount > 0 ? "-" + bulkDiscount.toLocaleString() + "円" : "0円";
+            document.getElementById('displayGrandTotal').innerText = grandTotal_Initial.toLocaleString() + "円";
+
+            // 「次月以降」
+            const rowMonthly = document.getElementById('rowRegularMonthly');
+            const rowLump = document.getElementById('rowRegularLump');
+            
+            if (monthlyDisplayMode) {
+                // 毎月払い用表示（単価）
+                rowMonthly.classList.remove('hidden');
+                rowLump.classList.add('hidden');
+                
+                const startM = nextMonthNum; 
+                document.getElementById('nextMonthLabelMonthly').innerText = regularMonths > 0 ? `${startM}月分 〜` : "-";
+                document.getElementById('displayRegularMonthly').innerText = monthlyTotal.toLocaleString() + "円";
+            } else {
+                // まとめて払う用表示（合計）
+                rowMonthly.classList.add('hidden');
+                rowLump.classList.remove('hidden');
+
+                if (initialPayment_RegularMonths > 0) {
+                    const startM = nextMonthNum;
+                    let endM_corrected = (startM + initialPayment_RegularMonths - 1 - 1) % 12 + 1; 
+                    document.getElementById('nextMonthLabelLump').innerText = `${startM}月分 〜 ${initialPayment_RegularMonths > 1 ? endM_corrected + '月分' : ''} (${initialPayment_RegularMonths}ヶ月)`;
+                    document.getElementById('displayRegularLump').innerText = regularFee_Initial.toLocaleString() + "円";
+                } else {
+                    document.getElementById('nextMonthLabelLump').innerText = "なし";
+                    document.getElementById('displayRegularLump').innerText = "0円";
+                }
+            }
+
+            // 第2回振込
+            const displaySecond = document.getElementById('displaySecondPayment');
+            const labelSecond = document.getElementById('secondPaymentLabel');
+            
+            if (regularFee_Second > 0) {
+                displaySecond.innerText = regularFee_Second.toLocaleString() + "円";
+                
+                let secStartM = (nextMonthNum + initialPayment_RegularMonths - 1) % 12 + 1;
+                let secEndM = (secStartM + secondPayment_RegularMonths - 1 - 1) % 12 + 1;
+
+                labelSecond.innerText = `対象期間: ${secStartM}月分 〜 ${secondPayment_RegularMonths > 1 ? secEndM + '月分' : ''} (${secondPayment_RegularMonths}ヶ月)`;
+                document.getElementById('secondPaymentDate').innerText = "指定日"; 
+            } else {
+                displaySecond.innerText = "0円";
+                labelSecond.innerText = "対象期間: なし";
+                document.getElementById('secondPaymentDate').innerText = "-";
+            }
+
+            // 引落開始月
+            const debitStartMonthsLater = initialPayment_RegularMonths + secondPayment_RegularMonths;
+            if (debitStartMonthsLater < regularMonths) {
+                let debitM = (nextMonthNum + debitStartMonthsLater - 1) % 12 + 1;
+                document.getElementById('debitStartLabel').innerText = `自動引落開始目安 (${debitM}月20日〜)`;
+            } else {
+                document.getElementById('debitStartLabel').innerText = "自動引落なし (全額振込済)";
+            }
+        }
+
+        // 初期計算実行
+        calculate();
+    </script>
+</body>
+</html>
