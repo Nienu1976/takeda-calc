@@ -22,15 +22,12 @@
 
         /* --- 見積書印刷用スタイル（画面外配置・A4最適化） --- */
         #quotation-wrapper {
-            position: fixed; /* absoluteだとスクロール等の影響を受けることがあるためfixedで画面外へ */
+            position: fixed;
             top: 0;
             left: -9999px;
-            /* A4 width at 96dpi is approx 794px. We use 800px for easy math/rendering quality */
             width: 800px; 
-            /* A4 height at 96dpi is approx 1123px. */
             min-height: 1130px; 
             background: white;
-            /* 上下左右の余白を少し詰めて情報量を確保 */
             padding: 35px 45px; 
             box-sizing: border-box;
             color: #333;
@@ -115,7 +112,7 @@
         .q-annual-box {
             margin-top: 15px;
             padding: 8px;
-            border: 2px dashed #b91c1c; /* 赤の破線で目立たせる */
+            border: 2px dashed #b91c1c; 
             background-color: #fffafa;
             text-align: right;
         }
@@ -123,6 +120,14 @@
         .q-annual-amount { font-size: 18px; font-weight: bold; color: #b91c1c; margin-left: 10px; }
 
         .q-note { font-size: 10px; color: #555; line-height: 1.5; margin-top: 15px; border: 1px solid #ddd; padding: 8px; border-radius: 4px; }
+        
+        .school-input {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
@@ -166,6 +171,66 @@
                         <label class="block text-sm font-bold mb-1">入会金</label>
                         <input type="number" id="entranceFee" class="w-full border rounded p-2" value="44000" oninput="calculate()">
                     </div>
+                </div>
+
+                <!-- 校舎情報設定 -->
+                <div class="mb-5 bg-gray-50 p-3 rounded border border-gray-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-bold">校舎情報の選択・編集</label>
+                    </div>
+                    <div class="flex gap-2 mb-3">
+                        <select id="schoolPreset" class="w-full border rounded p-2 text-sm" onchange="loadSchoolPreset()">
+                            <option value="fujieda">武田塾 藤枝校</option>
+                            <option value="custom">新規作成 / 手入力</option>
+                            <!-- 保存された校舎がここに動的に追加されます -->
+                        </select>
+                    </div>
+                    
+                    <div id="schoolInfoFields" class="space-y-2 text-sm">
+                        <div>
+                            <label class="text-xs text-gray-500">校舎名</label>
+                            <input type="text" id="si_name" class="school-input" placeholder="武田塾 〇〇校">
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="w-1/3">
+                                <label class="text-xs text-gray-500">郵便番号</label>
+                                <input type="text" id="si_zip" class="school-input" placeholder="000-0000">
+                            </div>
+                            <div class="w-2/3">
+                                <label class="text-xs text-gray-500">住所</label>
+                                <input type="text" id="si_address" class="school-input" placeholder="住所">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">ビル名など (住所2)</label>
+                            <input type="text" id="si_address2" class="school-input" placeholder="ビル名・階数">
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="w-1/2">
+                                <label class="text-xs text-gray-500">電話番号</label>
+                                <input type="text" id="si_tel" class="school-input" placeholder="00-0000-0000">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="text-xs text-gray-500">メール</label>
+                                <input type="text" id="si_mail" class="school-input" placeholder="email@example.com">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">校舎長・代表者名 (任意)</label>
+                            <input type="text" id="si_rep" class="school-input" placeholder="校舎長 〇〇">
+                        </div>
+                    </div>
+
+                    <!-- 保存・削除ボタンエリア -->
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="saveSchoolInfo()" class="flex-1 bg-blue-600 text-white text-xs font-bold py-2 rounded hover:bg-blue-700 transition">
+                            現在の内容を保存
+                        </button>
+                        <button onclick="deleteSchoolInfo()" id="btnDeletePreset" class="bg-gray-300 text-gray-600 text-xs font-bold py-2 px-3 rounded hover:bg-gray-400 transition" style="display:none;">
+                            削除
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1">※保存した情報はご使用のブラウザに記録されます。</p>
                 </div>
 
                 <div class="mb-6 bg-red-50 p-3 rounded border border-red-100">
@@ -242,7 +307,7 @@
                             </div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
-                        <!-- 他の高校生コース...（構造は同じため省略せずすべて記述） -->
+                        <!-- 他の高校生コース -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
                             <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">個別管理特訓L</span><span class="text-xs text-gray-500">61,380円 <span class="discount-badge ml-1">割引対象</span></span></div>
                             <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="61380" data-is-target="true" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
@@ -448,13 +513,8 @@
             </div>
         </div>
 
-        <div class="q-sender">
-            <span class="q-sender-name">武田塾 藤枝校</span><br>
-            〒426-0061 静岡県藤枝市田沼1-2-22<br>
-            エンブルステーション藤枝 204.205号室<br>
-            TEL: 054-689-5184<br>
-            Mail: fujieda@takeda.tv
-        </div>
+        <!-- 差出人情報: JSで書き換え -->
+        <div class="q-sender"></div>
 
         <div style="clear:both;"></div>
 
@@ -528,9 +588,171 @@
 
     <script>
         let currentMode = 'hs';
-        // 計算結果をグローバル変数で保持（PDF生成用）
         let pdfData = {};
+        const STORAGE_KEY = 'takeda_school_presets_v1';
 
+        // デフォルトプリセット（藤枝校）
+        const defaultPreset = {
+            fujieda: {
+                name: "武田塾 藤枝校",
+                zip: "426-0061",
+                address: "静岡県藤枝市田沼1-2-22",
+                address2: "エンブルステーション藤枝 204.205号室",
+                tel: "054-689-5184",
+                mail: "fujieda@takeda.tv",
+                rep: ""
+            }
+        };
+
+        // 初期ロード時にローカルストレージから読み込んでSelectに追加
+        function loadSchoolPreset() {
+            const select = document.getElementById('schoolPreset');
+            const selectedVal = select.value;
+            const btnDelete = document.getElementById('btnDeletePreset');
+
+            // フィールドへのセット処理
+            let data = null;
+            if (selectedVal === 'fujieda') {
+                data = defaultPreset.fujieda;
+                btnDelete.style.display = 'none';
+            } else if (selectedVal === 'custom') {
+                // 手入力モード：フィールドはクリア
+                // data = { name: "", zip: "", ... } とすると入力中のものが消えるので
+                // ここでは何もしない（ユーザーが手入力する）
+                data = null; 
+                btnDelete.style.display = 'none';
+            } else {
+                // カスタムプリセットの場合
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const presets = JSON.parse(stored);
+                    data = presets.find(p => p.id === selectedVal);
+                }
+                btnDelete.style.display = 'inline-block'; // 削除ボタン表示
+            }
+
+            if (data) {
+                document.getElementById('si_name').value = data.name || '';
+                document.getElementById('si_zip').value = data.zip || '';
+                document.getElementById('si_address').value = data.address || '';
+                document.getElementById('si_address2').value = data.address2 || '';
+                document.getElementById('si_tel').value = data.tel || '';
+                document.getElementById('si_mail').value = data.mail || '';
+                document.getElementById('si_rep').value = data.rep || '';
+            } else if (selectedVal === 'custom') {
+                // 新規作成時のみクリア（意図しない消去を防ぐため簡易チェック）
+                // 厳密には「直前がcustom以外だった場合」のみクリアしたいが、今回は単純化
+                if (document.getElementById('si_name').value === defaultPreset.fujieda.name) {
+                    document.getElementById('si_name').value = '';
+                    document.getElementById('si_zip').value = '';
+                    document.getElementById('si_address').value = '';
+                    document.getElementById('si_address2').value = '';
+                    document.getElementById('si_tel').value = '';
+                    document.getElementById('si_mail').value = '';
+                    document.getElementById('si_rep').value = '';
+                }
+            }
+        }
+
+        // プリセットを保存
+        function saveSchoolInfo() {
+            const name = document.getElementById('si_name').value.trim();
+            if (!name) {
+                alert("校舎名を入力してください。");
+                return;
+            }
+
+            const newPreset = {
+                id: 'school_' + new Date().getTime(), // ユニークID
+                name: name,
+                zip: document.getElementById('si_zip').value,
+                address: document.getElementById('si_address').value,
+                address2: document.getElementById('si_address2').value,
+                tel: document.getElementById('si_tel').value,
+                mail: document.getElementById('si_mail').value,
+                rep: document.getElementById('si_rep').value
+            };
+
+            // 既存の保存データを取得
+            let presets = [];
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                presets = JSON.parse(stored);
+            }
+
+            // 校舎名が同じものがあれば上書き確認
+            const existingIndex = presets.findIndex(p => p.name === name);
+            if (existingIndex !== -1) {
+                if (!confirm(`「${name}」は既に保存されています。上書きしますか？`)) {
+                    return;
+                }
+                presets[existingIndex] = newPreset; // IDも更新
+            } else {
+                presets.push(newPreset);
+            }
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(presets));
+            alert(`「${name}」を保存しました。`);
+            
+            // リスト更新
+            refreshPresetList(newPreset.id);
+        }
+
+        // プリセットを削除
+        function deleteSchoolInfo() {
+            const select = document.getElementById('schoolPreset');
+            const id = select.value;
+            if (id === 'fujieda' || id === 'custom') return;
+
+            if (!confirm("現在選択している校舎情報を削除しますか？")) return;
+
+            let presets = [];
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                presets = JSON.parse(stored);
+            }
+
+            const newPresets = presets.filter(p => p.id !== id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(newPresets));
+
+            alert("削除しました。");
+            refreshPresetList('fujieda'); // 藤枝に戻す
+        }
+
+        // セレクトボックスの選択肢を再生成
+        function refreshPresetList(selectId) {
+            const select = document.getElementById('schoolPreset');
+            // 一旦全クリアしてデフォルトを追加
+            select.innerHTML = '';
+            
+            const optFujieda = document.createElement('option');
+            optFujieda.value = 'fujieda';
+            optFujieda.text = '武田塾 藤枝校';
+            select.appendChild(optFujieda);
+
+            // ローカルストレージから読み込み
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const presets = JSON.parse(stored);
+                presets.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.text = p.name;
+                    select.appendChild(opt);
+                });
+            }
+
+            const optCustom = document.createElement('option');
+            optCustom.value = 'custom';
+            optCustom.text = '新規作成 / 手入力';
+            select.appendChild(optCustom);
+
+            // 選択状態を復元
+            select.value = selectId || 'fujieda';
+            loadSchoolPreset(); // フィールド反映
+        }
+
+        // 以下、既存の計算・PDFロジック (省略なし)
         function togglePaymentDetail() {
             const method = document.getElementById('paymentMethod').value;
             const splitDetail = document.getElementById('splitDetail');
@@ -657,7 +879,6 @@
             let bulkDiscount2 = 0; 
             let displayBulkDiscount = 0;
 
-            // スケジュール表示用データ
             let scheduleItems = [];
 
             if (paymentMethod === 'monthly') {
@@ -672,18 +893,15 @@
                     secondPayment_RegularMonths = Math.min(secondTransferOption, remainingMonths);
                 }
 
-                // スケジュール1: 初回
                 scheduleItems.push({
                     phase: '初回',
                     type: '振込',
                     desc: '入会金 + 初月 + 翌月分',
                     limit: '入会日まで',
-                    // amountは後で計算
                 });
 
-                // スケジュール2: 第2回 (あれば)
                 if (secondPayment_RegularMonths > 0) {
-                    const m2Start = (nextMonthNum + 1 - 1) % 12 + 1; // 翌々月
+                    const m2Start = (nextMonthNum + 1 - 1) % 12 + 1; 
                     const m2End = (m2Start + secondPayment_RegularMonths - 1 - 1) % 12 + 1;
                     const descRange = secondPayment_RegularMonths > 1 ? `${m2Start}月〜${m2End}月分` : `${m2Start}月分`;
                     
@@ -696,7 +914,6 @@
                     });
                 }
 
-                // スケジュール3: 口座振替
                 const debitStartOffset = initialPayment_RegularMonths + secondPayment_RegularMonths;
                 if (debitStartOffset < regularMonths) {
                     const debitM = (nextMonthNum + debitStartOffset - 1) % 12 + 1;
@@ -719,13 +936,11 @@
                 
                 displayBulkDiscount = bulkDiscount1;
 
-                // スケジュール1
                 scheduleItems.push({
                     phase: '初回',
                     type: '振込',
                     desc: '入会金 + 全期間特訓料金 (一括)',
                     limit: '入会日まで',
-                    // amountは後で計算
                 });
 
             } else if (paymentMethod === 'split2') {
@@ -733,7 +948,6 @@
                 if (startDate >= splitDate) {
                     initialPayment_RegularMonths = regularMonths;
                     secondPayment_RegularMonths = 0;
-                    // 実質一括
                     const totalDuration = regularMonths + (startWeeks / 4.0);
                     if (totalDuration >= 6) bulkDiscount1 = 33000;
                     else if (totalDuration >= 3) bulkDiscount1 = 11000;
@@ -763,7 +977,6 @@
 
                     displayBulkDiscount = bulkDiscount1;
 
-                    // スケジュール1
                     scheduleItems.push({
                         phase: '初回',
                         type: '振込',
@@ -771,7 +984,6 @@
                         limit: '入会日まで',
                     });
 
-                    // スケジュール2
                     const secAmount = (monthlyTotal * secondPayment_RegularMonths) - bulkDiscount2;
                     scheduleItems.push({
                         phase: '第2回',
@@ -788,20 +1000,13 @@
             const grandTotal_Initial = entranceFee + firstMonthFee + regularFee_Initial - displayBulkDiscount;
             const grandTotal_Second = regularFee_Second - bulkDiscount2;
 
-            // スケジュール1の金額確定
             if(scheduleItems.length > 0) {
                 scheduleItems[0].amount = grandTotal_Initial;
             }
 
-            // --- 年間総額計算 ---
-            // 単純に全期間の支払予定額を合計する
-            // = 入会金 + 初月 + (月額 * 月数) - 全割引
-            // ただし割引は「1回目割引 + 2回目割引」の合計
             const totalDiscountAll = (displayBulkDiscount) + (bulkDiscount2);
             const annualTotal = entranceFee + firstMonthFee + (monthlyTotal * regularMonths) - totalDiscountAll;
 
-
-            // --- 画面更新 ---
             document.getElementById('monthlyTotalRaw').innerText = rawMonthlyTotal.toLocaleString();
             document.getElementById('multiCourseDiscount').innerText = "-" + discountAmount.toLocaleString();
             document.getElementById('monthlyTotalFinal').innerText = monthlyTotal.toLocaleString();
@@ -818,7 +1023,6 @@
             const rowMonthly = document.getElementById('rowRegularMonthly');
             const rowLump = document.getElementById('rowRegularLump');
             
-            // PDF用データ保存
             pdfData = {
                 date: new Date().toLocaleDateString('ja-JP'),
                 entranceFee: entranceFee,
@@ -828,17 +1032,13 @@
                 discountAmount: displayBulkDiscount,
                 totalInitial: grandTotal_Initial,
                 
-                // 第2回
                 hasSecond: (regularFee_Second > 0 || bulkDiscount2 > 0),
                 secondRegularFee: regularFee_Second,
                 secondDiscount: bulkDiscount2,
                 secondTotal: Math.max(0, grandTotal_Second),
                 secondLabel: '',
                 
-                // スケジュール
                 schedule: scheduleItems,
-                
-                // 年間総額
                 annualTotal: annualTotal
             };
 
@@ -849,7 +1049,6 @@
                 document.getElementById('nextMonthLabelMonthly').innerText = regularMonths > 0 ? `${startM}月分 〜` : "-";
                 document.getElementById('displayRegularMonthly').innerText = monthlyTotal.toLocaleString() + "円";
                 
-                // PDF用
                 pdfData.regularLabel = `正規月額特訓費 (${startM}月分)`;
                 pdfData.regularFee = monthlyTotal; 
                 pdfData.regularNote = `※翌月1ヶ月分`;
@@ -865,7 +1064,6 @@
                     document.getElementById('nextMonthLabelLump').innerText = `${startM}月分 〜 ${initialPayment_RegularMonths > 1 ? endM + '月分' : ''} (${initialPayment_RegularMonths}ヶ月)`;
                     document.getElementById('displayRegularLump').innerText = regularFee_Initial.toLocaleString() + "円";
                     
-                    // PDF用
                     pdfData.regularLabel = `正規特訓費 (${startM}月〜${endM}月)`;
                     pdfData.regularNote = `${initialPayment_RegularMonths}ヶ月分`;
                     pdfData.regularAmount = regularFee_Initial;
@@ -925,18 +1123,32 @@
             }
         }
 
-        // PDF生成処理
         window.generatePDF = function() {
-            // 名前入力
             const name = prompt("宛名（お客様のお名前）を入力してください:", "");
-            if (name === null) return; // キャンセル
+            if (name === null) return; 
 
-            // 1. 隠しエリアにデータを流し込む
             document.getElementById('q-date-value').innerText = new Date().toLocaleDateString('ja-JP');
             document.getElementById('q-name-value').innerText = name || "お客様";
             document.getElementById('q-total-amount').innerText = "¥ " + pdfData.totalInitial.toLocaleString() + " -";
 
-            // 初回明細作成
+            const sName = document.getElementById('si_name').value;
+            const sZip = document.getElementById('si_zip').value;
+            const sAddr = document.getElementById('si_address').value;
+            const sAddr2 = document.getElementById('si_address2').value;
+            const sTel = document.getElementById('si_tel').value;
+            const sMail = document.getElementById('si_mail').value;
+            const sRep = document.getElementById('si_rep').value;
+
+            let senderHtml = `<span class="q-sender-name">${sName}</span><br>`;
+            if(sZip) senderHtml += `〒${sZip} `;
+            senderHtml += `${sAddr}<br>`;
+            if(sAddr2) senderHtml += `${sAddr2}<br>`;
+            if(sTel) senderHtml += `TEL: ${sTel}<br>`;
+            if(sMail) senderHtml += `Mail: ${sMail}`;
+            if(sRep) senderHtml += `<br>${sRep}`;
+            
+            document.querySelector('.q-sender').innerHTML = senderHtml;
+
             const tbody = document.getElementById('q-tbody');
             tbody.innerHTML = '';
 
@@ -951,14 +1163,13 @@
             }
 
             rows.forEach(r => {
-                if (r.price === 0 && r.item.includes("正規") && r.price === 0) return; // 0円なら飛ばす
+                if (r.price === 0 && r.item.includes("正規") && r.price === 0) return;
                 const tr = document.createElement('tr');
                 const priceStr = r.price < 0 ? "▲" + Math.abs(r.price).toLocaleString() : r.price.toLocaleString();
                 tr.innerHTML = `<td>${r.item}</td><td>${r.note}</td><td class="col-price">${priceStr}</td>`;
                 tbody.appendChild(tr);
             });
 
-            // スケジュール表作成
             const schedTbody = document.getElementById('q-schedule-tbody');
             schedTbody.innerHTML = '';
             
@@ -976,15 +1187,12 @@
                 schedTbody.appendChild(tr);
             });
 
-            // 年間総額
             document.getElementById('q-annual-total').innerText = "¥ " + pdfData.annualTotal.toLocaleString();
 
-            // 2. html2canvasで画像化
             const element = document.getElementById('quotation-wrapper');
             
-            // HTML2Canvas options for better quality
             const options = {
-                scale: 2, // Retina display quality
+                scale: 2, 
                 useCORS: true,
                 logging: false,
                 windowWidth: 1000, 
@@ -994,30 +1202,21 @@
             html2canvas(element, options).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const { jsPDF } = window.jspdf;
-                // A4 portrait: 210mm x 297mm
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 const pageWidth = pdf.internal.pageSize.getWidth();
                 const pageHeight = pdf.internal.pageSize.getHeight();
                 
                 const imgWidth = pageWidth; 
-                // Calculate actual aspect ratio height
                 let imgHeight = canvas.height * imgWidth / canvas.width;
                 
-                // もし画像高さがA4高さを超える場合、縮小して1ページに収める
-                // (余白などを考慮して少し余裕を持たせるなら pageHeight - 10 とかでも可)
                 if (imgHeight > pageHeight) {
                     const ratio = pageHeight / imgHeight;
-                    // 幅も高さも同じ比率で縮小する（横に余白ができるが切れるよりマシ）
-                    // あるいは、縦横比を無視して引き伸ばす（歪むので非推奨）
-                    // ここでは「全体が見えるように縮小」を採用
                     const newWidth = imgWidth * ratio;
                     const newHeight = imgHeight * ratio;
                     
-                    // 中央寄せにする場合
                     const xOffset = (pageWidth - newWidth) / 2;
                     pdf.addImage(imgData, 'PNG', xOffset, 0, newWidth, newHeight);
                 } else {
-                    // 通常通り配置
                     pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
                 }
                 
@@ -1025,8 +1224,7 @@
             });
         };
 
-        // 初期計算実行
-        calculate();
+        refreshPresetList();
     </script>
 </body>
 </html>
