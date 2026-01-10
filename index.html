@@ -20,33 +20,94 @@
         .tab-btn.active { background-color: #b91c1c; color: white; border-color: #b91c1c; }
         .tab-btn { background-color: white; color: #374151; border: 1px solid #d1d5db; }
 
-        /* 見積書印刷用スタイル（画面外に配置） */
+        /* --- 見積書印刷用スタイル（画面外配置・A4最適化） --- */
         #quotation-wrapper {
             position: absolute;
             top: -9999px;
             left: -9999px;
-            width: 210mm; /* A4 width */
-            min-height: 297mm; /* A4 height */
+            /* A4 width is approx 794px at 96dpi, but we use a fixed pixel width for consistent html2canvas rendering */
+            width: 800px; 
+            min-height: 1120px; /* A4 height approx */
             background: white;
-            padding: 20mm;
+            padding: 40px 50px;
             box-sizing: border-box;
             color: #333;
-            font-family: 'Noto Sans JP', serif; /* 明朝体っぽくしたいがWebフォント依存なのでゴシックで統一 */
+            font-family: 'Noto Sans JP', sans-serif;
+            line-height: 1.5;
         }
-        .q-header { border-bottom: 2px solid #b91c1c; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
-        .q-title { font-size: 24px; font-weight: bold; color: #333; }
-        .q-date { font-size: 12px; }
-        .q-recipient { font-size: 18px; border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 20px; display: inline-block; min-width: 200px; }
-        .q-sender { font-size: 12px; text-align: right; line-height: 1.5; }
-        .q-total-box { background-color: #f3f4f6; border: 1px solid #ccc; padding: 10px; text-align: center; margin-bottom: 30px; }
-        .q-total-label { font-size: 14px; margin-bottom: 5px; }
-        .q-total-amount { font-size: 28px; font-weight: bold; color: #b91c1c; }
-        .q-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
-        .q-table th { background-color: #b91c1c; color: white; padding: 8px; text-align: left; font-weight: normal; }
-        .q-table td { border-bottom: 1px solid #ddd; padding: 8px; vertical-align: top; }
-        .q-table .col-price { text-align: right; width: 100px; }
-        .q-table .col-note { width: 180px; color: #666; font-size: 11px; }
-        .q-note { font-size: 11px; color: #555; line-height: 1.6; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; }
+        .q-header { 
+            border-bottom: 3px solid #b91c1c; 
+            padding-bottom: 15px; 
+            margin-bottom: 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-end; 
+        }
+        .q-title { font-size: 32px; font-weight: bold; color: #333; letter-spacing: 2px; }
+        .q-date { font-size: 14px; text-align: right; }
+        .q-recipient-box { margin-bottom: 30px; }
+        .q-recipient { 
+            font-size: 22px; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 5px; 
+            display: inline-block; 
+            min-width: 250px; 
+            font-weight: bold;
+        }
+        .q-sender { 
+            float: right;
+            font-size: 13px; 
+            text-align: right; 
+            line-height: 1.6; 
+            margin-top: -20px;
+        }
+        .q-sender-name { font-weight: bold; font-size: 16px; margin-bottom: 4px; display: block;}
+        
+        .q-summary-box {
+            clear: both;
+            background-color: #fff1f2;
+            border: 2px solid #b91c1c;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .q-total-label { font-size: 16px; margin-bottom: 5px; font-weight: bold; color: #7f1d1d; }
+        .q-total-amount { font-size: 36px; font-weight: bold; color: #b91c1c; }
+        .q-sub-text { font-size: 12px; color: #666; }
+
+        .q-section-title {
+            font-size: 16px;
+            font-weight: bold;
+            border-left: 6px solid #b91c1c;
+            padding-left: 10px;
+            margin-bottom: 10px;
+            margin-top: 30px;
+            background-color: #f3f4f6;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        .q-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 13px; }
+        .q-table th { 
+            background-color: #4b5563; 
+            color: white; 
+            padding: 10px; 
+            text-align: center; 
+            font-weight: bold; 
+            border: 1px solid #4b5563;
+        }
+        .q-table td { 
+            border: 1px solid #d1d5db; 
+            padding: 10px 10px; 
+            vertical-align: middle; 
+        }
+        .q-table .col-center { text-align: center; }
+        .q-table .col-right { text-align: right; }
+        .q-table .col-price { text-align: right; width: 120px; font-weight: bold; }
+        .q-table .row-highlight { background-color: #fff1f2; font-weight: bold; }
+
+        .q-note { font-size: 11px; color: #555; line-height: 1.6; margin-top: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
@@ -57,11 +118,11 @@
                 <h1 class="text-xl md:text-2xl font-bold">武田塾 入会金・料金計算ツール</h1>
                 <p class="text-sm opacity-90">条件を入力すると、申込書記入用の金額が算出されます。</p>
             </div>
-            <button onclick="generatePDF()" class="bg-white text-red-700 hover:bg-red-50 font-bold py-2 px-4 rounded shadow flex items-center gap-2 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button onclick="generatePDF()" class="bg-white text-red-700 hover:bg-red-50 font-bold py-2 px-4 rounded shadow flex items-center gap-2 transition border-2 border-transparent hover:border-red-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                見積書PDF出力
+                <span>見積書PDF出力</span>
             </button>
         </header>
 
@@ -149,7 +210,7 @@
                 </div>
 
                 <div class="space-y-0 text-sm max-h-96 overflow-y-auto pr-1 border-t border-gray-100">
-                    
+                    <!-- コース一覧はJSで制御（既存維持） -->
                     <!-- ================= 高校生コース ================= -->
                     <div id="courses-hs">
                         <!-- 個別管理S -->
@@ -166,186 +227,64 @@
                             </div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
-
-                        <!-- 個別管理L -->
+                        <!-- 他の高校生コース...（構造は同じため省略せずすべて記述） -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
-                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight">
-                                <span class="text-sm font-bold text-gray-700">個別管理特訓L</span>
-                                <span class="text-xs text-gray-500">61,380円 <span class="discount-badge ml-1">割引対象</span></span>
-                            </div>
-                            <div class="col-span-3 md:col-span-3">
-                                <div class="flex items-center">
-                                    <input type="number" min="0" value="0" data-price="61380" data-is-target="true" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()">
-                                    <span class="text-xs text-gray-400 ml-1">回</span>
-                                </div>
-                            </div>
+                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">個別管理特訓L</span><span class="text-xs text-gray-500">61,380円 <span class="discount-badge ml-1">割引対象</span></span></div>
+                            <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="61380" data-is-target="true" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
-
-                        <!-- 宿題確認S -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
-                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight">
-                                <span class="text-sm font-bold text-gray-700">宿題確認特訓S</span>
-                                <span class="text-xs text-gray-500">81,180円</span>
-                            </div>
-                            <div class="col-span-3 md:col-span-3">
-                                <div class="flex items-center">
-                                    <input type="number" min="0" value="0" data-price="81180" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()">
-                                    <span class="text-xs text-gray-400 ml-1">回</span>
-                                </div>
-                            </div>
+                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">宿題確認特訓S</span><span class="text-xs text-gray-500">81,180円</span></div>
+                            <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="81180" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
-
-                        <!-- 宿題確認L -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
-                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight">
-                                <span class="text-sm font-bold text-gray-700">宿題確認特訓L</span>
-                                <span class="text-xs text-gray-500">102,300円</span>
-                            </div>
-                            <div class="col-span-3 md:col-span-3">
-                                <div class="flex items-center">
-                                    <input type="number" min="0" value="0" data-price="102300" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()">
-                                    <span class="text-xs text-gray-400 ml-1">回</span>
-                                </div>
-                            </div>
+                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">宿題確認特訓L</span><span class="text-xs text-gray-500">102,300円</span></div>
+                            <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="102300" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
-
-                        <!-- 独学支援S -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
-                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight">
-                                <span class="text-sm font-bold text-gray-700">独学支援特訓S</span>
-                                <span class="text-xs text-gray-500">55,440円</span>
-                            </div>
-                            <div class="col-span-3 md:col-span-3">
-                                <div class="flex items-center">
-                                    <input type="number" min="0" value="0" data-price="55440" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()">
-                                    <span class="text-xs text-gray-400 ml-1">回</span>
-                                </div>
-                            </div>
+                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">独学支援特訓S</span><span class="text-xs text-gray-500">55,440円</span></div>
+                            <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="55440" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
-
-                        <!-- 独学支援L -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
-                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight">
-                                <span class="text-sm font-bold text-gray-700">独学支援特訓L</span>
-                                <span class="text-xs text-gray-500">67,540円</span>
-                            </div>
-                            <div class="col-span-3 md:col-span-3">
-                                <div class="flex items-center">
-                                    <input type="number" min="0" value="0" data-price="67540" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()">
-                                    <span class="text-xs text-gray-400 ml-1">回</span>
-                                </div>
-                            </div>
+                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">独学支援特訓L</span><span class="text-xs text-gray-500">67,540円</span></div>
+                            <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="67540" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
-
-                        <!-- 小論個別 -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
-                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight">
-                                <span class="text-sm font-bold text-gray-700">小論個別特訓</span>
-                                <span class="text-xs text-gray-500">51,700円</span>
-                            </div>
-                            <div class="col-span-3 md:col-span-3">
-                                <div class="flex items-center">
-                                    <input type="number" min="0" value="0" data-price="51700" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()">
-                                    <span class="text-xs text-gray-400 ml-1">回</span>
-                                </div>
-                            </div>
+                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">小論個別特訓</span><span class="text-xs text-gray-500">51,700円</span></div>
+                            <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="51700" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
-
-                        <!-- 完全個別 -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
-                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight">
-                                <span class="text-sm font-bold text-gray-700">完全個別特訓</span>
-                                <span class="text-xs text-gray-500">66,440円</span>
-                            </div>
-                            <div class="col-span-3 md:col-span-3">
-                                <div class="flex items-center">
-                                    <input type="number" min="0" value="0" data-price="66440" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()">
-                                    <span class="text-xs text-gray-400 ml-1">回</span>
-                                </div>
-                            </div>
+                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">完全個別特訓</span><span class="text-xs text-gray-500">66,440円</span></div>
+                            <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="66440" data-is-target="false" class="course-input hs-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
                     </div>
 
                     <!-- ================= 小・中学生コース ================= -->
                     <div id="courses-jh" class="hidden">
-                        <!-- 完全指導S -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
-                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight">
-                                <span class="text-sm font-bold text-gray-700">完全指導特訓S</span>
-                                <div class="flex flex-wrap gap-1">
-                                    <span class="text-xs text-gray-500">36,960円</span>
-                                    <span class="subject-badge">1科目</span>
-                                    <span class="discount-badge">割引対象</span>
-                                </div>
-                            </div>
-                            <div class="col-span-3 md:col-span-3">
-                                <div class="flex items-center">
-                                    <input type="number" min="0" value="0" data-price="36960" data-is-target="true" data-subjects="1" class="course-input jh-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()">
-                                    <span class="text-xs text-gray-400 ml-1">回</span>
-                                </div>
-                            </div>
+                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">完全指導特訓S</span><div class="flex flex-wrap gap-1"><span class="text-xs text-gray-500">36,960円</span><span class="subject-badge">1科目</span><span class="discount-badge">割引対象</span></div></div>
+                            <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="36960" data-is-target="true" data-subjects="1" class="course-input jh-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
-
-                        <!-- 完全指導L -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
-                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight">
-                                <span class="text-sm font-bold text-gray-700">完全指導特訓L</span>
-                                <div class="flex flex-wrap gap-1">
-                                    <span class="text-xs text-gray-500">49,280円</span>
-                                    <span class="subject-badge">2科目</span>
-                                    <span class="discount-badge">割引対象</span>
-                                </div>
-                            </div>
-                            <div class="col-span-3 md:col-span-3">
-                                <div class="flex items-center">
-                                    <input type="number" min="0" value="0" data-price="49280" data-is-target="true" data-subjects="2" class="course-input jh-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()">
-                                    <span class="text-xs text-gray-400 ml-1">回</span>
-                                </div>
-                            </div>
+                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">完全指導特訓L</span><div class="flex flex-wrap gap-1"><span class="text-xs text-gray-500">49,280円</span><span class="subject-badge">2科目</span><span class="discount-badge">割引対象</span></div></div>
+                            <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="49280" data-is-target="true" data-subjects="2" class="course-input jh-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
-
-                        <!-- 宿題確認S -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
-                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight">
-                                <span class="text-sm font-bold text-gray-700">宿題確認特訓S</span>
-                                <div class="flex flex-wrap gap-1">
-                                    <span class="text-xs text-gray-500">64,900円</span>
-                                    <span class="subject-badge">3科目</span>
-                                </div>
-                            </div>
-                            <div class="col-span-3 md:col-span-3">
-                                <div class="flex items-center">
-                                    <input type="number" min="0" value="0" data-price="64900" data-is-target="false" data-subjects="3" class="course-input jh-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()">
-                                    <span class="text-xs text-gray-400 ml-1">回</span>
-                                </div>
-                            </div>
+                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">宿題確認特訓S</span><div class="flex flex-wrap gap-1"><span class="text-xs text-gray-500">64,900円</span><span class="subject-badge">3科目</span></div></div>
+                            <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="64900" data-is-target="false" data-subjects="3" class="course-input jh-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
-
-                        <!-- 宿題確認L -->
                         <div class="grid grid-cols-12 gap-2 items-center border-b border-gray-100 py-2 hover:bg-gray-50">
-                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight">
-                                <span class="text-sm font-bold text-gray-700">宿題確認特訓L</span>
-                                <div class="flex flex-wrap gap-1">
-                                    <span class="text-xs text-gray-500">81,840円</span>
-                                    <span class="subject-badge">5科目</span>
-                                </div>
-                            </div>
-                            <div class="col-span-3 md:col-span-3">
-                                <div class="flex items-center">
-                                    <input type="number" min="0" value="0" data-price="81840" data-is-target="false" data-subjects="5" class="course-input jh-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()">
-                                    <span class="text-xs text-gray-400 ml-1">回</span>
-                                </div>
-                            </div>
+                            <div class="col-span-6 md:col-span-5 flex flex-col leading-tight"><span class="text-sm font-bold text-gray-700">宿題確認特訓L</span><div class="flex flex-wrap gap-1"><span class="text-xs text-gray-500">81,840円</span><span class="subject-badge">5科目</span></div></div>
+                            <div class="col-span-3 md:col-span-3"><div class="flex items-center"><input type="number" min="0" value="0" data-price="81840" data-is-target="false" data-subjects="5" class="course-input jh-course w-full border rounded p-1 text-right shadow-sm" oninput="calculate()"><span class="text-xs text-gray-400 ml-1">回</span></div></div>
                             <div class="col-span-3 md:col-span-4 text-right"><span class="row-subtotal font-bold text-gray-600">0</span><span class="text-xs text-gray-500">円</span></div>
                         </div>
                     </div>
@@ -481,39 +420,45 @@
         </div>
     </div>
 
-    <!-- 印刷用隠しエリア -->
+    <!-- 印刷用隠しエリア (A4サイズ最適化) -->
     <div id="quotation-wrapper">
         <div class="q-header">
             <div class="q-title">御 見 積 書</div>
             <div class="q-date">発行日: <span id="q-date-value">2026/01/01</span></div>
         </div>
 
-        <div class="q-recipient">
-            <span id="q-name-value">お客様</span> 様
+        <div class="q-recipient-box">
+            <div class="q-recipient">
+                <span id="q-name-value">お客様</span> 様
+            </div>
         </div>
 
         <div class="q-sender">
-            <strong>武田塾 藤枝校</strong><br>
+            <span class="q-sender-name">武田塾 藤枝校</span><br>
             〒426-0061 静岡県藤枝市田沼1-2-22<br>
             エンブルステーション藤枝 204.205号室<br>
             TEL: 054-689-5184<br>
             Mail: fujieda@takeda.tv
         </div>
 
-        <p class="q-note">
+        <div style="clear:both;"></div>
+
+        <p class="q-note" style="border:none; padding:0; margin:10px 0 20px 0; font-size:13px;">
             この度は、武田塾にご入会いただき誠にありがとうございます。<br>
             下記の通り、入会金および特訓料金のお見積りを申し上げます。
         </p>
 
-        <div class="q-total-box">
+        <div class="q-summary-box">
             <div class="q-total-label">【今回ご請求金額 (初回振込)】</div>
             <div class="q-total-amount" id="q-total-amount">¥ 0 -</div>
+            <div class="q-sub-text">※入会日までにお振込みをお願いいたします。</div>
         </div>
 
+        <div class="q-section-title">内訳詳細</div>
         <table class="q-table">
             <thead>
                 <tr>
-                    <th>項目</th>
+                    <th style="width: 25%;">項目</th>
                     <th>内容・期間</th>
                     <th class="col-price">金額(税込)</th>
                 </tr>
@@ -523,32 +468,29 @@
             </tbody>
         </table>
 
-        <!-- 第2回がある場合のみ表示 -->
-        <div id="q-second-block" style="display: none; margin-top: 30px;">
-            <div style="border-bottom: 2px solid #b91c1c; margin-bottom: 10px; font-weight: bold;">【第2回 お振込分】</div>
-            <table class="q-table">
-                <thead>
-                    <tr>
-                        <th>項目</th>
-                        <th>内容・期間</th>
-                        <th class="col-price">金額(税込)</th>
-                    </tr>
-                </thead>
-                <tbody id="q-tbody-2">
-                    <!-- JSで生成 -->
-                </tbody>
-            </table>
-            <div style="text-align: right; font-weight: bold; font-size: 16px;">
-                第2回 合計: <span id="q-second-total">¥ 0</span>
-            </div>
-            <p style="font-size: 11px; color: #666; text-align: right;">※指定の期日までにお振込みをお願いいたします。</p>
-        </div>
+        <!-- お支払いスケジュール表 (新規追加) -->
+        <div class="q-section-title">お支払いスケジュール</div>
+        <table class="q-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">時期</th>
+                    <th style="width: 20%;">種別</th>
+                    <th>内容・対象期間</th>
+                    <th style="width: 18%;">お支払期限</th>
+                    <th class="col-price">お支払金額</th>
+                </tr>
+            </thead>
+            <tbody id="q-schedule-tbody">
+                <!-- JSで生成 -->
+            </tbody>
+        </table>
 
-        <p class="q-note" style="margin-top: 50px;">
-            ※ 本見積書の有効期限は発行日より2週間です。<br>
-            ※ 実際のお支払いは、入会申込書および契約書に基づきます。<br>
-            ※ 自動引落の手続き完了までは、銀行振込にてお支払いをお願いいたします。
-        </p>
+        <div id="q-schedule-note" class="q-note">
+            <!-- 注釈 -->
+            ※実際のお支払いは、入会申込書および契約書に基づきます。<br>
+            ※自動引落の手続き完了までは、銀行振込にてお支払いをお願いいたします。<br>
+            ※本見積書の有効期限は発行日より2週間です。
+        </div>
     </div>
 
     <script>
@@ -682,6 +624,9 @@
             let bulkDiscount2 = 0; 
             let displayBulkDiscount = 0;
 
+            // スケジュール表示用データ
+            let scheduleItems = [];
+
             if (paymentMethod === 'monthly') {
                 monthlyDisplayMode = true;
                 initialPayment_RegularMonths = 1; 
@@ -694,6 +639,43 @@
                     secondPayment_RegularMonths = Math.min(secondTransferOption, remainingMonths);
                 }
 
+                // スケジュール1: 初回
+                scheduleItems.push({
+                    phase: '初回',
+                    type: '振込',
+                    desc: '入会金 + 初月 + 翌月分',
+                    limit: '入会日まで',
+                    // amountは後で計算
+                });
+
+                // スケジュール2: 第2回 (あれば)
+                if (secondPayment_RegularMonths > 0) {
+                    const m2Start = (nextMonthNum + 1 - 1) % 12 + 1; // 翌々月
+                    const m2End = (m2Start + secondPayment_RegularMonths - 1 - 1) % 12 + 1;
+                    const descRange = secondPayment_RegularMonths > 1 ? `${m2Start}月〜${m2End}月分` : `${m2Start}月分`;
+                    
+                    scheduleItems.push({
+                        phase: '第2回',
+                        type: '振込',
+                        desc: `特訓料金 (${descRange})`,
+                        limit: '指定期日',
+                        amount: monthlyTotal * secondPayment_RegularMonths
+                    });
+                }
+
+                // スケジュール3: 口座振替
+                const debitStartOffset = initialPayment_RegularMonths + secondPayment_RegularMonths;
+                if (debitStartOffset < regularMonths) {
+                    const debitM = (nextMonthNum + debitStartOffset - 1) % 12 + 1;
+                    scheduleItems.push({
+                        phase: '毎月',
+                        type: '口座引落',
+                        desc: `特訓料金 (${debitM}月分以降)`,
+                        limit: `毎月20日 (${debitM}月〜)`,
+                        amount: monthlyTotal
+                    });
+                }
+
             } else if (paymentMethod === 'lump') {
                 initialPayment_RegularMonths = regularMonths;
                 secondPayment_RegularMonths = 0;
@@ -704,11 +686,33 @@
                 
                 displayBulkDiscount = bulkDiscount1;
 
+                // スケジュール1
+                scheduleItems.push({
+                    phase: '初回',
+                    type: '振込',
+                    desc: '入会金 + 全期間特訓料金 (一括)',
+                    limit: '入会日まで',
+                    // amountは後で計算
+                });
+
             } else if (paymentMethod === 'split2') {
                 let splitDate = new Date(fiscalYear, 8, 1);
                 if (startDate >= splitDate) {
                     initialPayment_RegularMonths = regularMonths;
                     secondPayment_RegularMonths = 0;
+                    // 実質一括
+                    const totalDuration = regularMonths + (startWeeks / 4.0);
+                    if (totalDuration >= 6) bulkDiscount1 = 33000;
+                    else if (totalDuration >= 3) bulkDiscount1 = 11000;
+                    displayBulkDiscount = bulkDiscount1;
+
+                    scheduleItems.push({
+                        phase: '初回',
+                        type: '振込',
+                        desc: '入会金 + 全期間特訓料金 (一括)',
+                        limit: '入会日まで',
+                    });
+
                 } else {
                     const endAugust = new Date(fiscalYear, 8, 0); 
                     let monthsUntilAugust = 0;
@@ -717,21 +721,44 @@
                     }
                     initialPayment_RegularMonths = monthsUntilAugust;
                     secondPayment_RegularMonths = regularMonths - monthsUntilAugust;
+
+                    const duration1 = initialPayment_RegularMonths + (startWeeks / 4.0);
+                    if (duration1 >= 3) bulkDiscount1 = 11000;
+                    
+                    const duration2 = secondPayment_RegularMonths; 
+                    if (duration2 >= 3) bulkDiscount2 = 11000;
+
+                    displayBulkDiscount = bulkDiscount1;
+
+                    // スケジュール1
+                    scheduleItems.push({
+                        phase: '初回',
+                        type: '振込',
+                        desc: `入会金 + 第1回期間 (${nextMonthNum}月〜8月分)`,
+                        limit: '入会日まで',
+                    });
+
+                    // スケジュール2
+                    const secAmount = (monthlyTotal * secondPayment_RegularMonths) - bulkDiscount2;
+                    scheduleItems.push({
+                        phase: '第2回',
+                        type: '振込',
+                        desc: `第2回期間 (9月〜2月分) ※割引適用後`,
+                        limit: '指定期日 (8月末等)',
+                        amount: Math.max(0, secAmount)
+                    });
                 }
-
-                const duration1 = initialPayment_RegularMonths + (startWeeks / 4.0);
-                if (duration1 >= 3) bulkDiscount1 = 11000;
-                
-                const duration2 = secondPayment_RegularMonths; 
-                if (duration2 >= 3) bulkDiscount2 = 11000;
-
-                displayBulkDiscount = bulkDiscount1;
             }
 
             const regularFee_Initial = monthlyTotal * initialPayment_RegularMonths;
             const regularFee_Second = monthlyTotal * secondPayment_RegularMonths;
             const grandTotal_Initial = entranceFee + firstMonthFee + regularFee_Initial - displayBulkDiscount;
             const grandTotal_Second = regularFee_Second - bulkDiscount2;
+
+            // スケジュール1の金額確定
+            if(scheduleItems.length > 0) {
+                scheduleItems[0].amount = grandTotal_Initial;
+            }
 
             // --- 画面更新 ---
             document.getElementById('monthlyTotalRaw').innerText = rawMonthlyTotal.toLocaleString();
@@ -765,7 +792,10 @@
                 secondRegularFee: regularFee_Second,
                 secondDiscount: bulkDiscount2,
                 secondTotal: Math.max(0, grandTotal_Second),
-                secondLabel: ''
+                secondLabel: '',
+                
+                // スケジュール
+                schedule: scheduleItems
             };
 
             if (monthlyDisplayMode) {
@@ -778,8 +808,6 @@
                 // PDF用
                 pdfData.regularLabel = `正規月額特訓費 (${startM}月分)`;
                 pdfData.regularFee = monthlyTotal; 
-                // 毎月払いの場合、初期費用に含まれるのは1ヶ月分のみ
-                // しかし計算上 regularFee_Initial になってるのでそれを信用
                 pdfData.regularNote = `※翌月1ヶ月分`;
                 pdfData.regularAmount = regularFee_Initial;
 
@@ -879,49 +907,52 @@
             }
 
             rows.forEach(r => {
-                if (r.price === 0 && r.item.includes("正規")) return; // 0円なら飛ばす
+                if (r.price === 0 && r.item.includes("正規") && r.price === 0) return; // 0円なら飛ばす
                 const tr = document.createElement('tr');
                 const priceStr = r.price < 0 ? "▲" + Math.abs(r.price).toLocaleString() : r.price.toLocaleString();
                 tr.innerHTML = `<td>${r.item}</td><td class="col-note">${r.note}</td><td class="col-price">${priceStr}</td>`;
                 tbody.appendChild(tr);
             });
 
-            // 第2回がある場合
-            const secondBlock = document.getElementById('q-second-block');
-            const tbody2 = document.getElementById('q-tbody-2');
-            if (pdfData.hasSecond) {
-                secondBlock.style.display = 'block';
-                tbody2.innerHTML = '';
+            // スケジュール表作成
+            const schedTbody = document.getElementById('q-schedule-tbody');
+            schedTbody.innerHTML = '';
+            
+            pdfData.schedule.forEach((s, index) => {
+                const tr = document.createElement('tr');
+                if (index === 0) tr.classList.add('row-highlight');
                 
-                const tr1 = document.createElement('tr');
-                tr1.innerHTML = `<td>特訓料金 (${pdfData.secondLabel})</td><td class="col-note">期間合計</td><td class="col-price">${pdfData.secondRegularFee.toLocaleString()}</td>`;
-                tbody2.appendChild(tr1);
-
-                if (pdfData.secondDiscount > 0) {
-                    const tr2 = document.createElement('tr');
-                    tr2.innerHTML = `<td>割引</td><td class="col-note">まとめ払い等</td><td class="col-price">▲${pdfData.secondDiscount.toLocaleString()}</td>`;
-                    tbody2.appendChild(tr2);
-                }
-                document.getElementById('q-second-total').innerText = "¥ " + pdfData.secondTotal.toLocaleString();
-            } else {
-                secondBlock.style.display = 'none';
-            }
+                tr.innerHTML = `
+                    <td class="col-center">${s.phase}</td>
+                    <td class="col-center">${s.type}</td>
+                    <td>${s.desc}</td>
+                    <td class="col-center">${s.limit}</td>
+                    <td class="col-price">${s.amount.toLocaleString()} 円</td>
+                `;
+                schedTbody.appendChild(tr);
+            });
 
             // 2. html2canvasで画像化
             const element = document.getElementById('quotation-wrapper');
             
-            // 一時的に表示位置をずらしてキャプチャ可能にする（display:noneだと撮れない）
-            // style設定済みなのでそのまま
+            // HTML2Canvas options for better quality
+            const options = {
+                scale: 2, // Retina display quality
+                useCORS: true,
+                logging: false
+            };
             
-            html2canvas(element, { scale: 2 }).then(canvas => {
+            html2canvas(element, options).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const { jsPDF } = window.jspdf;
+                // A4 portrait: 210mm x 297mm
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 
-                const imgWidth = 210;
-                const pageHeight = 297;
+                const imgWidth = 210; 
+                // Calculate height based on aspect ratio
                 const imgHeight = canvas.height * imgWidth / canvas.width;
                 
+                // Add image at (0, 0)
                 pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
                 pdf.save(`見積書_${name || 'お客様'}.pdf`);
             });
