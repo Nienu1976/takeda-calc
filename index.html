@@ -22,33 +22,34 @@
 
         /* --- 見積書印刷用スタイル（画面外配置・A4最適化） --- */
         #quotation-wrapper {
-            position: absolute;
-            top: -9999px;
+            position: fixed; /* absoluteだとスクロール等の影響を受けることがあるためfixedで画面外へ */
+            top: 0;
             left: -9999px;
-            /* A4 width is approx 794px at 96dpi */
+            /* A4 width at 96dpi is approx 794px. We use 800px for easy math/rendering quality */
             width: 800px; 
-            /* 内容が見切れないよう十分な高さを確保（A4縦比率より少し長めでも縮小フィットさせるロジックに変更可能だが、まずはcanvas描画範囲を確保） */
-            min-height: 1200px; 
+            /* A4 height at 96dpi is approx 1123px. */
+            min-height: 1130px; 
             background: white;
-            padding: 40px 50px;
+            /* 上下左右の余白を少し詰めて情報量を確保 */
+            padding: 35px 45px; 
             box-sizing: border-box;
             color: #333;
             font-family: 'Noto Sans JP', sans-serif;
-            line-height: 1.5;
+            line-height: 1.4;
         }
         .q-header { 
             border-bottom: 3px solid #b91c1c; 
-            padding-bottom: 15px; 
-            margin-bottom: 30px; 
+            padding-bottom: 10px; 
+            margin-bottom: 20px; 
             display: flex; 
             justify-content: space-between; 
             align-items: flex-end; 
         }
-        .q-title { font-size: 32px; font-weight: bold; color: #333; letter-spacing: 2px; }
-        .q-date { font-size: 14px; text-align: right; }
-        .q-recipient-box { margin-bottom: 30px; }
+        .q-title { font-size: 28px; font-weight: bold; color: #333; letter-spacing: 2px; }
+        .q-date { font-size: 13px; text-align: right; }
+        .q-recipient-box { margin-bottom: 20px; }
         .q-recipient { 
-            font-size: 22px; 
+            font-size: 20px; 
             border-bottom: 1px solid #333; 
             padding-bottom: 5px; 
             display: inline-block; 
@@ -57,44 +58,44 @@
         }
         .q-sender { 
             float: right;
-            font-size: 13px; 
+            font-size: 12px; 
             text-align: right; 
-            line-height: 1.6; 
-            margin-top: -20px;
+            line-height: 1.5; 
+            margin-top: -10px;
         }
-        .q-sender-name { font-weight: bold; font-size: 16px; margin-bottom: 4px; display: block;}
+        .q-sender-name { font-weight: bold; font-size: 15px; margin-bottom: 2px; display: block;}
         
         .q-summary-box {
             clear: both;
             background-color: #fff1f2;
             border: 2px solid #b91c1c;
-            border-radius: 8px;
-            padding: 15px;
+            border-radius: 6px;
+            padding: 10px;
             text-align: center;
-            margin: 30px 0;
+            margin: 20px 0;
         }
-        .q-total-label { font-size: 16px; margin-bottom: 5px; font-weight: bold; color: #7f1d1d; }
-        .q-total-amount { font-size: 36px; font-weight: bold; color: #b91c1c; }
-        .q-sub-text { font-size: 12px; color: #666; }
+        .q-total-label { font-size: 15px; margin-bottom: 2px; font-weight: bold; color: #7f1d1d; }
+        .q-total-amount { font-size: 32px; font-weight: bold; color: #b91c1c; }
+        .q-sub-text { font-size: 11px; color: #666; }
 
         .q-section-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             border-left: 6px solid #b91c1c;
             padding-left: 10px;
-            margin-bottom: 10px;
-            margin-top: 30px;
+            margin-bottom: 8px;
+            margin-top: 25px;
             background-color: #f3f4f6;
-            padding-top: 5px;
-            padding-bottom: 5px;
+            padding-top: 4px;
+            padding-bottom: 4px;
         }
 
-        /* テーブルレイアウトの修正: 固定幅にして重なりを防ぐ */
-        .q-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 13px; table-layout: fixed; }
+        /* テーブルレイアウト: 固定幅 */
+        .q-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; table-layout: fixed; }
         .q-table th { 
             background-color: #4b5563; 
             color: white; 
-            padding: 10px; 
+            padding: 8px; 
             text-align: center; 
             font-weight: bold; 
             border: 1px solid #4b5563;
@@ -102,26 +103,26 @@
         }
         .q-table td { 
             border: 1px solid #d1d5db; 
-            padding: 10px 10px; 
+            padding: 8px; 
             vertical-align: middle;
-            word-wrap: break-word; /* 長い文字は折り返す */
+            word-wrap: break-word; 
         }
         .q-table .col-center { text-align: center; }
         .q-table .col-right { text-align: right; }
-        .q-table .col-price { text-align: right; font-weight: bold; white-space: nowrap; } /* 金額は折り返さない */
+        .q-table .col-price { text-align: right; font-weight: bold; white-space: nowrap; font-size: 13px; }
         .q-table .row-highlight { background-color: #fff1f2; font-weight: bold; }
 
         .q-annual-box {
-            margin-top: 20px;
-            padding: 10px;
-            border: 2px dashed #999;
-            background-color: #f9fafb;
+            margin-top: 15px;
+            padding: 8px;
+            border: 2px dashed #b91c1c; /* 赤の破線で目立たせる */
+            background-color: #fffafa;
             text-align: right;
         }
-        .q-annual-label { font-size: 14px; font-weight: bold; color: #555; }
-        .q-annual-amount { font-size: 20px; font-weight: bold; color: #333; margin-left: 10px; }
+        .q-annual-label { font-size: 13px; font-weight: bold; color: #555; }
+        .q-annual-amount { font-size: 18px; font-weight: bold; color: #b91c1c; margin-left: 10px; }
 
-        .q-note { font-size: 11px; color: #555; line-height: 1.6; margin-top: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 4px; }
+        .q-note { font-size: 10px; color: #555; line-height: 1.5; margin-top: 15px; border: 1px solid #ddd; padding: 8px; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
@@ -457,7 +458,7 @@
 
         <div style="clear:both;"></div>
 
-        <p class="q-note" style="border:none; padding:0; margin:10px 0 20px 0; font-size:13px;">
+        <p class="q-note" style="border:none; padding:0; margin:5px 0 15px 0; font-size:12px;">
             この度は、武田塾にご入会いただき誠にありがとうございます。<br>
             下記の通り、入会金および特訓料金のお見積りを申し上げます。
         </p>
@@ -986,8 +987,8 @@
                 scale: 2, // Retina display quality
                 useCORS: true,
                 logging: false,
-                windowWidth: 1000, // 広めの仮想ウィンドウ幅でレイアウト崩れ防止
-                windowHeight: 2000 // 仮想ウィンドウ高さ
+                windowWidth: 1000, 
+                windowHeight: 2000 
             };
             
             html2canvas(element, options).then(canvas => {
@@ -995,13 +996,31 @@
                 const { jsPDF } = window.jspdf;
                 // A4 portrait: 210mm x 297mm
                 const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
                 
-                const imgWidth = 210; 
-                // Calculate height based on aspect ratio
-                const imgHeight = canvas.height * imgWidth / canvas.width;
+                const imgWidth = pageWidth; 
+                // Calculate actual aspect ratio height
+                let imgHeight = canvas.height * imgWidth / canvas.width;
                 
-                // Add image at (0, 0)
-                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                // もし画像高さがA4高さを超える場合、縮小して1ページに収める
+                // (余白などを考慮して少し余裕を持たせるなら pageHeight - 10 とかでも可)
+                if (imgHeight > pageHeight) {
+                    const ratio = pageHeight / imgHeight;
+                    // 幅も高さも同じ比率で縮小する（横に余白ができるが切れるよりマシ）
+                    // あるいは、縦横比を無視して引き伸ばす（歪むので非推奨）
+                    // ここでは「全体が見えるように縮小」を採用
+                    const newWidth = imgWidth * ratio;
+                    const newHeight = imgHeight * ratio;
+                    
+                    // 中央寄せにする場合
+                    const xOffset = (pageWidth - newWidth) / 2;
+                    pdf.addImage(imgData, 'PNG', xOffset, 0, newWidth, newHeight);
+                } else {
+                    // 通常通り配置
+                    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                }
+                
                 pdf.save(`見積書_${name || 'お客様'}.pdf`);
             });
         };
